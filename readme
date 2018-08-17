@@ -1,0 +1,15 @@
+#fer = Modelo()
+#retorno = fer.read('res.partner',1, ['name'])
+
+#filtro = [['id', '=', 1], ['color', '=', 0]]
+#fields = ['name']
+#retorno = fer.search('res.partner', filtro, fields)
+
+#vals = {'name': 'fernando recci', 'city': 'azul'}
+#retorno = fer.create('res.partner', vals)
+
+#vals = {'name': 'javier recci', 'city': 'azul (bs as)'}
+#retorno = fer.update('res.partner', 2416, vals)
+
+#retorno = fer.delete('res.partner', 2416)
+#print retorno
