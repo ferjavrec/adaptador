@@ -9,6 +9,7 @@ __version__ = "1.00"
 from rest_chasqui import Adapter_Chasqui
 from xml_rpc import Modelo
 from datetime import datetime, timedelta
+from config import config
 import database
 import json
 import logging
@@ -111,7 +112,7 @@ def GetIdPedido(id_pedido):
 	return pedido.search('sale.order', filtro, fields)
 
 
-def CrearPedidosColectivos(adapter, fi, ff, debug=False):
+def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 	logger.info('>>> Chequeando si hay pedidos Colectivos ...')
 	param = {}
 	param['idVendedor'] = idVendedor
@@ -137,8 +138,8 @@ def CrearPedidosColectivos(adapter, fi, ff, debug=False):
 			print 'Cantidad de pedidos:', cantidadpedidos
 		if cantidadpedidos>0:
 			#hay pedidos nuevos
-			logger.info('>>> Agregando Pedidos Colectivos ...')
 			for pedido in pedidosRX:
+				logger.info('>>> Agregando Pedidos Colectivos ...')
 				aliasPuntoDeRetiro = pedido['aliasPuntoDeRetiro']
 				aliasNodo = pedido['aliasNodo']
 				id_Domicilio = pedido['id_Domicilio']
@@ -238,10 +239,10 @@ def CrearPedidosColectivos(adapter, fi, ff, debug=False):
 
 
 
-def CrearPedidos(adapter, fi, ff, debug=False):
+def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 	logger.info('>>> Chequeando si hay pedidos ...')
 	param = {}
-	param['idVendedor'] = idVendedor
+	param['idVendedor'] = idvendedor
 	param['fechaInicial'] = fi
 	param['fechaFinal'] = ff
 	error = False
@@ -266,7 +267,6 @@ def CrearPedidos(adapter, fi, ff, debug=False):
 
 		if cantidadpedidos>0:
 			#hay pedidos nuevos
-			logger.info('>>> Agregando pedidos nuevos ...')
 			for pedido in pedidoRX:
 				id_pedido = pedido['id_Pedido']
 				id_cliente = pedido['id_Cliente']
@@ -292,6 +292,7 @@ def CrearPedidos(adapter, fi, ff, debug=False):
 
 				#chequeamos si el pedido ya existe
 				if not GetIdPedido(id_pedido):
+					logger.info('>>> Agregando pedidos nuevos ...')
 					vals = {
 						'origin': str(id_pedido),
 						'partner_id': odoo_clienteid, 
@@ -350,6 +351,7 @@ def CrearPedidos(adapter, fi, ff, debug=False):
 
 
 if __name__ == '__main__':
+	debug=False
 	db = database.Database()
 	ultimo_update = db.GetDatos()
 
@@ -365,12 +367,15 @@ if __name__ == '__main__':
 	fi='2017-01-09 16:10:11'
 	ff=f_hasta.strftime('%Y-%m-%d %H:%M:%S')
 
-	debug=False
+	
+	config.read('configuracion.conf')
+	endpoint = config.get('default', 'confi_chasqui')
+
 	conection = {}
-	conection['host'] = '168.181.184.203'
-	conection['port'] = 8080
-	idVendedor = 2
+	conection['host'] = config.get(endpoint, 'url')
+	conection['port'] = config.get(endpoint, 'puerto')
+	idvendedor = config.get(endpoint, 'idvendedor')
 
 	mw = Adapter_Chasqui(conection)
-	CrearPedidos(mw, fi, ff, debug)
-	CrearPedidosColectivos(mw, fi, ff, debug)
+	CrearPedidos(mw, fi, ff, idvendedor, debug)
+	CrearPedidosColectivos(mw, fi, ff, idvendedor, debug)

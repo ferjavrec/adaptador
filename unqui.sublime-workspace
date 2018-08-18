@@ -523,7 +523,7 @@
 			"file": "adaptador.py",
 			"settings":
 			{
-				"buffer_size": 10194,
+				"buffer_size": 10030,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
@@ -687,9 +687,12 @@
 	],
 	"file_history":
 	[
+		"/home/fer/unqui/xml_rpc.py",
+		"/home/fer/unqui/config.py",
+		"/home/fer/unqui/rest_chasqui.py",
+		"/home/fer/unqui/database.py",
 		"/home/fer/Escritorio/prueba.txt",
 		"/media/sf_compartido/cooperativas/san_manuel/imp_arba.py",
-		"/home/fer/unqui/database.py",
 		"/home/fer/SIGCoop/sigcoop_afip/citi.py",
 		"/home/fer/SIGCoop/sigcoop_avisos_de_corte/impresora.py",
 		"/home/fer/SIGCoop/sigcoop_avisos_de_corte/wizard_impresion.py",
@@ -811,10 +814,7 @@
 		"/home/fer/SIGCoop/sale/stock.py",
 		"/home/fer/SIGCoop/subdiario/invoice_anterior.py",
 		"/home/fer/SIGCoop/sigcoop_consumos/view/consumo_tree.xml",
-		"/media/sf_compartido/manuales/personal.txt",
-		"/home/fer/SIGCoop/account_retencion_ar/account_retencion_ar.py",
-		"/home/fer/SIGCoop/sigcoop_account_voucher_ar/view/lines_credits_tree.xml",
-		"/home/fer/SIGCoop/sigcoop_middleware_prepago/exportador.py"
+		"/media/sf_compartido/manuales/personal.txt"
 	],
 	"find":
 	{
@@ -832,6 +832,11 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"odoo_clienteid_coordinador",
+			"emailCoordinador",
+			"cliente_coodinador",
+			"odoo_clienteid",
+			"existecliente",
 			"claves"
 		],
 		"highlight": true,
@@ -859,15 +864,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10194,
+						"buffer_size": 10030,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2806,
-								2806
+								459,
+								459
 							]
 						],
 						"settings":
@@ -875,8 +880,8 @@
 							"syntax": "Packages/Python/Python.sublime-syntax",
 							"translate_tabs_to_spaces": false
 						},
-						"translation.x": 57.0,
-						"translation.y": 1425.0,
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,

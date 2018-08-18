@@ -17,7 +17,7 @@ except ImportError:
 __all__ = ['config']
 
 CONFIG_PATH = [
-    os.path.realpath('./odoo.conf'),
+    os.path.realpath('./configuracion.conf'),
 ]
 
 

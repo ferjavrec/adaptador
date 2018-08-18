@@ -12,15 +12,15 @@ from config import config
 
 class Modelo():
 	def __init__(self):
-		config.read('odoo.conf')
-		endpoint = config.get('default', 'endpoint')
+		config.read('configuracion.conf')
+		endpoint = config.get('default', 'confi_odoo')
 		self.db = config.get(endpoint, 'db')
 		self.username = config.get(endpoint, 'user')
 		self.password = config.get(endpoint, 'password')
 		url = config.get(endpoint, 'url')
-		common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(url), allow_none=True)
+		common = xmlrpclib.ServerProxy('http://{}/xmlrpc/2/common'.format(url), allow_none=True)
 		self.uid = common.authenticate(self.db, self.username, self.password, {})
-		self.models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
+		self.models = xmlrpclib.ServerProxy('http://{}/xmlrpc/2/object'.format(url), allow_none=True)
 
 
 
