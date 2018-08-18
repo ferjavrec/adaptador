@@ -1,138 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = "Fernando Recci <<Geneos>> <reccifernando@gmail.com>"
+__copyright__ = "Copyright (C) 2018 GENEOS http://www.geneos.com.ar/"
+__license__ = "GPL 3.0"
+__version__ = "1.00"
+
 from rest_chasqui import Adapter_Chasqui
 from xml_rpc import Modelo
 from datetime import datetime, timedelta
 import database
 import json
- 
+import logging
 
-
-def DatosDireccion(adapter, debug=False):
-	param = {}
-	param['id'] = 1
-
-	if debug:
-		print 'Parametros:', param
-	resp = adapter.datosDireccion(param)
-	if debug:
-		print 'Codigo respuesta servidor:', resp.status_code
-	if (resp) and (resp.status_code==200):
-		#llegaron los datos bien
-		datos = resp.json()
-		if debug:
-			print 'Datos recibidos:', datos
-		alias = datos['alias']
-		departamento = datos['departamento']
-		calle = datos['calle']
-		localidad = datos['localidad']
-		calleAdyacente2 = datos['calleAdyacente2']
-		calleAdyacente1 = datos['calleAdyacente1']
-		codigoPostal = datos['codigoPostal']
-		id_Domicilio = datos['id_Domicilio']
-		altura = datos['altura']
-		if debug:
-			print 'alias:', alias
-			print 'departamento:', departamento
-			print 'calle:', calle
-			print 'localidad:', localidad
-			print 'calleAdyacente2:', calleAdyacente2
-			print 'calleAdyacente1', calleAdyacente1
-			print 'id_Domicilio', id_Domicilio
-			print 'altura', altura
-
-
-
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 		
-
-
-
-def NuevosPedidosColectivos(adapter, debug=False):
-	param = {}
-	param['idVendedor'] = idVendedor
-	param['fechaInicial'] = '2017-01-25 16:10:11' #'2017-11-25 16:10:11'
-	param['fechaFinal'] = '2018-07-05 00:00:00'
-	
-	#if debug:
-	#	print 'Parametros:', param
-	resp = adapter.nuevosPedidosColectivos(param)
-	#if debug:
-	#	print 'Codigo respuesta servidor:', resp.status_code
-
-	if (resp) and (resp.status_code==200):
-		#llegaron los datos bien
-		datos = resp.json()
-		if debug:
-			print 'Datos recibidos:', datos
-		print ' '
-		pedidosRX = datos['pedidosColectivos']
-		cantidadpedidos = len(pedidosRX)
-
-		if debug:
-			print 'Cantidad de pedidos:', cantidadpedidos
-		if cantidadpedidos>0:
-			#hay pedidos nuevos
-			#import pudb;pu.db
-			for pedido in pedidosRX:
-				aliasPuntoDeRetiro = pedido['aliasPuntoDeRetiro']
-				aliasNodo = pedido['aliasNodo']
-				id_Domicilio = pedido['id_Domicilio']
-				emailCoordinador = pedido['emailCoordinador']
-				pedidosIndividuales = pedido['pedidosIndividuales']
-
-				print aliasPuntoDeRetiro
-				print aliasNodo
-				print id_Domicilio
-				print emailCoordinador
-
-				if len(pedidosIndividuales)>0:
-					items_pedidos = []
-					#import pudb;pu.db
-					for item in pedidosIndividuales:
-						clientes = item['pedidos'].keys()
-						for i in clientes:
-							print 'cliente: ', i
-							ped = item['pedidos'][i]
-							#print ped
-							#print '-----------------------'
-							for producto in ped:
-								odoo_productoid = producto['cod_Producto']			
-								id_producto = producto['id_Producto']
-								precio = producto['precio']
-								cantidadpedida = producto['cantidadPedida']
-								print producto['cod_Producto'],id_producto, precio, cantidadpedida
-
-
-					
-					print ' '
-						
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###################################################################
-#
-# Comienzo de rutinas del adaptador Chasqui <--> Odoo
-#
-###################################################################
 def GetIdCliente(email):
 	cliente = Modelo()
 	filtro = [['email', '=', email]]
@@ -161,11 +44,27 @@ def AgregarCliente(adapter, email, debug=False):
 		telefonoFijo = datos['telefonoFijo']
 		id_cliente = datos['id']
 		direcciones = datos['direcciones']
-		calle = direcciones[0]['calle']
-		localidad = direcciones[0]['localidad']
-		codigoPostal = direcciones[0]['codigoPostal']
-		altura = direcciones[0]['altura']
-		id_Domicilio = direcciones[0]['id_Domicilio']
+		
+		if direcciones and direcciones[0]:
+			calle = direcciones[0]['calle']
+		else:
+			calle = 's/d'	
+		if direcciones and direcciones[0]:
+			localidad = direcciones[0]['localidad']
+		else:
+			localidad = 's/d'
+		if direcciones and direcciones[0]:
+			codigoPostal = direcciones[0]['codigoPostal']
+		else:
+			codigoPostal = 's/d'
+		if direcciones and direcciones[0]:
+			altura = direcciones[0]['altura']
+		else:
+			altura = 's/d'
+		if direcciones and direcciones[0]:
+			id_Domicilio = direcciones[0]['id_Domicilio']
+		else:
+			id_Domicilio = -1	
 
 		if debug:
 			print 'apellido:', apellido
@@ -198,13 +97,11 @@ def AgregarCliente(adapter, email, debug=False):
 		return -1
 
 
-
 def GetIdProducto(cod_Producto):
 	producto = Modelo()
 	filtro = [['default_code', '=', cod_Producto]]
 	fields = ['id']
 	return producto.search('product.template', filtro, fields)
-
 
 
 def GetIdPedido(id_pedido):
@@ -214,8 +111,135 @@ def GetIdPedido(id_pedido):
 	return pedido.search('sale.order', filtro, fields)
 
 
+def CrearPedidosColectivos(adapter, fi, ff, debug=False):
+	logger.info('>>> Chequeando si hay pedidos Colectivos ...')
+	param = {}
+	param['idVendedor'] = idVendedor
+	param['fechaInicial'] = fi
+	param['fechaFinal'] = ff
+	error = False
+	
+	if debug:
+		print 'Parametros:', param
+	resp = adapter.nuevosPedidosColectivos(param)
+	if debug:
+		print 'Codigo respuesta servidor:', resp.status_code
+
+	if (resp) and (resp.status_code==200):
+		#llegaron los datos bien
+		datos = resp.json()
+		if debug:
+			print 'Datos recibidos:', datos
+		pedidosRX = datos['pedidosColectivos']
+		cantidadpedidos = len(pedidosRX)
+
+		if debug:
+			print 'Cantidad de pedidos:', cantidadpedidos
+		if cantidadpedidos>0:
+			#hay pedidos nuevos
+			logger.info('>>> Agregando Pedidos Colectivos ...')
+			for pedido in pedidosRX:
+				aliasPuntoDeRetiro = pedido['aliasPuntoDeRetiro']
+				aliasNodo = pedido['aliasNodo']
+				id_Domicilio = pedido['id_Domicilio']
+				emailCoordinador = pedido['emailCoordinador']
+				pedidosIndividuales = pedido['pedidosIndividuales']
+
+				#chequeamos si existe el cliente coordinador a recibir el pedido
+				#si no existe lo creamos
+				cliente_coodinador = GetIdCliente(emailCoordinador)
+				if not cliente_coodinador:
+					#si no existe lo creamos
+					agregarcliente = AgregarCliente(adapter, emailCoordinador, debug)
+					if agregarcliente!=-1:
+						odoo_clienteid_coordinador = agregarcliente		
+						if debug:
+							print "el cliente coordinador se creo correctamente", emailCoordinador
+					else:
+						if debug:
+							print "error al crear el cliente coordinador", emailCoordinador
+						error=True
+				else:
+					odoo_clienteid_coordinador = int(cliente_coodinador[0]['id'])
+
+				if debug:
+					print aliasPuntoDeRetiro
+					print aliasNodo
+					print id_Domicilio
+					print emailCoordinador
+
+				
+				if len(pedidosIndividuales)>0:
+					items_pedidos = []
+					for item in pedidosIndividuales:
+						clientes = item['pedidos'].keys()
+						for i in clientes:
+							if debug:
+								print 'cliente: ', i
+
+							#chequeamos si existe el cliente
+							#si no existe lo creamos
+							cliente_id = GetIdCliente(i)
+							if not cliente_id:
+								#si no existe lo creamos
+								agregarcliente = AgregarCliente(adapter, i, debug)
+								if agregarcliente!=-1:
+									odoo_clienteid = agregarcliente		
+									if debug:
+										print "el cliente se creo correctamente", i
+								else:
+									if debug:
+										print "error al crear el cliente", i
+									error=True
+							else:
+								odoo_clienteid = int(cliente_id[0]['id'])
+
+							#creamos la orden de venta
+							vals = {
+								'origin': 'Pedido Colectivo',
+								'partner_id': odoo_clienteid, 
+								'pricelist_id': 1,  
+								'partner_invoice_id': odoo_clienteid,
+								'partner_shipping_id': odoo_clienteid_coordinador
+							}
+
+							items_prod = []
+							for producto in item['pedidos'][i]:
+								odoo_productoid = GetIdProducto(producto['cod_Producto'])[0]['id']			
+								id_producto = producto['id_Producto']
+								precio = producto['precio']
+								cantidadpedida = producto['cantidadPedida']
+
+								items_prod.append((0, 0, {
+										'product_id': odoo_productoid,
+										'product_uom_qty': cantidadpedida,
+										'qty_delivered': cantidadpedida,
+										'price_unit': precio
+										}))
+							vals['order_line'] = items_prod
+
+							saleorder = Modelo()
+							retorno = saleorder.create('sale.order', vals)			
+
+							if debug:
+								print '-------------------------------------------'
+								print 'productos', items_prod
+								print '-------------------------------------------'
+
+				else:
+					return 0
+	else:
+		error=True
+
+	if error:
+		return -1
+	else:
+		return retorno
+
+
 
 def CrearPedidos(adapter, fi, ff, debug=False):
+	logger.info('>>> Chequeando si hay pedidos ...')
 	param = {}
 	param['idVendedor'] = idVendedor
 	param['fechaInicial'] = fi
@@ -242,6 +266,7 @@ def CrearPedidos(adapter, fi, ff, debug=False):
 
 		if cantidadpedidos>0:
 			#hay pedidos nuevos
+			logger.info('>>> Agregando pedidos nuevos ...')
 			for pedido in pedidoRX:
 				id_pedido = pedido['id_Pedido']
 				id_cliente = pedido['id_Cliente']
@@ -325,7 +350,6 @@ def CrearPedidos(adapter, fi, ff, debug=False):
 
 
 if __name__ == '__main__':
-	'''
 	db = database.Database()
 	ultimo_update = db.GetDatos()
 
@@ -338,125 +362,15 @@ if __name__ == '__main__':
 	db.SetDatos([f_hasta])
 
 	#fi=f_desde.strftime('%Y-%m-%d %H:%M:%S')
-	fi='2018-06-09 16:10:11'
+	fi='2017-01-09 16:10:11'
 	ff=f_hasta.strftime('%Y-%m-%d %H:%M:%S')
-	'''
 
-	debug=True
+	debug=False
 	conection = {}
 	conection['host'] = '168.181.184.203'
 	conection['port'] = 8080
 	idVendedor = 2
 
 	mw = Adapter_Chasqui(conection)
-	#CrearPedidos(mw, fi, ff, debug)
-	
-
-	#DatosDireccion(mw, debug)
-	#AgregarCliente(mw, 'juanperez@prueba.com', debug)
-	NuevosPedidosColectivos(mw, debug)
-
-	#pruebaorden()
-	
-	#print GetIdProducto('lsn002')
-	'''
-	fer = Modelo()
-
-	filtro = [['id', '=', 1], ['color', '=', 0]]
-	fields = ['name']
-	retorno = fer.search('res.partner', filtro, fields)
-		
-	print retorno
-	'''
-
-	#if ExisteCliente('yaninafrankel@hotmail.com'):
-	#	print "sisisi"
-	#else:
-	#	print "noooo"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-	'''
-	datos['pedidoClienteDomicilio'][2]['cantidadesProductoResponse'][0]['id_Producto'] 
-
-	#resp = mw.nuevosPedidosColectivos(param)
-	if (resp) and (resp.status_code==200):
-		#llegaron los datos bien
-		datos = resp.json()
-		cantidadpedidos = len(datos['pedidosColectivos'])
-		
-
-		for x in range(2, cantidadpedidos):
-			#retorna los items
-			#aliasPuntoDeRetiro
-			#aliasNodo
-			#pedidosIndividuales
-			#id_Domicilio
-			#emailCoordinador
-			#print pedido 
-				
-			aliasPuntoDeRetiro = datos['pedidosColectivos'][x]['aliasPuntoDeRetiro']
-			aliasNodo = datos['pedidosColectivos'][x]['aliasNodo']
-			pedidosIndividuales = datos['pedidosColectivos'][x]['pedidosIndividuales']
-			id_Domicilio = datos['pedidosColectivos'][x]['id_Domicilio']
-			emailCoordinador = datos['pedidosColectivos'][x]['emailCoordinador']
-
-			#import pudb; pu.db
-
-			#print aliasPuntoDeRetiro
-			#print aliasNodo
-			#print pedidosIndividuales
-			
-
-
-			#print id_Domicilio
-			#print emailCoordinador
-
-
-			for item in pedidosIndividuales[0]['pedidos']['maradalponte@gmail.com']:
-				print item
-
-
-				#print datos['pedidosColectivos'][x][pedido]
-
-				#datos['pedidosColectivos'][0]['emailCoordinador']
-
-		#for item in datos:
-		#	print item
-
-
-
-
-	else:
-		print 'Error en datos recibidos'
-
-	'''
+	CrearPedidos(mw, fi, ff, debug)
+	CrearPedidosColectivos(mw, fi, ff, debug)

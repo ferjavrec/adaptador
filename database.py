@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+__author__ = "Fernando Recci <<Geneos>> <reccifernando@gmail.com>"
+__copyright__ = "Copyright (C) 2018 GENEOS http://www.geneos.com.ar/"
+__license__ = "GPL 3.0"
+__version__ = "1.00"
+
 import psycopg2
 
 

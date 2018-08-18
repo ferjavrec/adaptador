@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = "Fernando Recci <<Geneos>> <reccifernando@gmail.com>"
+__copyright__ = "Copyright (C) 2018 GENEOS http://www.geneos.com.ar/"
+__license__ = "GPL 3.0"
+__version__ = "1.00"
+
 import xmlrpclib
 from config import config
-
 
 
 class Modelo():
@@ -14,9 +18,9 @@ class Modelo():
 		self.username = config.get(endpoint, 'user')
 		self.password = config.get(endpoint, 'password')
 		url = config.get(endpoint, 'url')
-		common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(url))
+		common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(url), allow_none=True)
 		self.uid = common.authenticate(self.db, self.username, self.password, {})
-		self.models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+		self.models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url), allow_none=True)
 
 
 
