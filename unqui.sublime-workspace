@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"id",
+				"idvendedor"
+			],
+			[
 				"cla",
 				"claves"
 			],
@@ -118,10 +122,6 @@
 			[
 				"desde",
 				"desde_letra"
-			],
-			[
-				"id",
-				"id_suministro"
 			],
 			[
 				"im",
@@ -520,10 +520,10 @@
 	"buffers":
 	[
 		{
-			"file": "adaptador.py",
+			"file": ".gitignore",
 			"settings":
 			{
-				"buffer_size": 10030,
+				"buffer_size": 372,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
 			}
@@ -687,7 +687,10 @@
 	],
 	"file_history":
 	[
+		"/home/fer/unqui/chasqui2odoo.py",
+		"/home/fer/unqui/readme",
 		"/home/fer/unqui/xml_rpc.py",
+		"/home/fer/unqui/configuracion.conf",
 		"/home/fer/unqui/config.py",
 		"/home/fer/unqui/rest_chasqui.py",
 		"/home/fer/unqui/database.py",
@@ -811,10 +814,7 @@
 		"/home/fer/SIGCoop/sigcoop_middleware_prepago/test_dev/test.py",
 		"/home/fer/SIGCoop/sigcoop_suministro/invoice.py",
 		"/home/fer/SIGCoop/sigcoop_consumos/consumo.py",
-		"/home/fer/SIGCoop/sale/stock.py",
-		"/home/fer/SIGCoop/subdiario/invoice_anterior.py",
-		"/home/fer/SIGCoop/sigcoop_consumos/view/consumo_tree.xml",
-		"/media/sf_compartido/manuales/personal.txt"
+		"/home/fer/SIGCoop/sale/stock.py"
 	],
 	"find":
 	{
@@ -832,6 +832,8 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"CrearPedidos",
+			"idvendedor",
 			"odoo_clienteid_coordinador",
 			"emailCoordinador",
 			"cliente_coodinador",
@@ -860,25 +862,24 @@
 			[
 				{
 					"buffer": 0,
-					"file": "adaptador.py",
+					"file": ".gitignore",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10030,
+						"buffer_size": 372,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								459,
-								459
+								17,
+								17
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"translate_tabs_to_spaces": false
+							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
