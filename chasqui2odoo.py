@@ -14,7 +14,7 @@ import database
 import json
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('__chasqui2odoo__')
 logging.basicConfig(level=logging.INFO)
 		
 def GetIdCliente(email):
@@ -29,15 +29,15 @@ def AgregarCliente(adapter, email, debug=False):
 	param['id'] = email
 
 	if debug:
-		print 'Parametros:', param
+		logger.info('>>> Parametros enviados: %s', str(param))
 	resp = adapter.datosCliente(param)
 	if debug:
-		print 'Codigo respuesta servidor:', resp.status_code
+		logger.info('>>> Codigo respuesta servidor: %s', str(resp.status_code))
 	if (resp) and (resp.status_code==200):
 		#llegaron los datos bien
 		datos = resp.json()
 		if debug:
-			print 'Datos recibidos:', datos
+			logger.info('>>> Datos Recibidos: %s', datos)
 		apellido = datos['apellido']
 		nombre = datos['nombre']
 		email = datos['email']
@@ -68,13 +68,14 @@ def AgregarCliente(adapter, email, debug=False):
 			id_Domicilio = -1	
 
 		if debug:
-			print 'apellido:', apellido
-			print 'nombre:', nombre
-			print 'email:', email
-			print 'telefonoMovil:', telefonoMovil
-			print 'telefonoFijo:', telefonoFijo
-			print 'id_Cliente:', id_cliente
-			print 'direcciones', direcciones
+			logger.info('apellido: %s', apellido)
+			logger.info('nombre: %s', nombre)
+			logger.info('email: %s', email)
+			logger.info('telefonoMovil: %s', telefonoMovil)
+			logger.info('telefonoFijo: %s', telefonoFijo)
+			logger.info('id_Cliente: %s', id_cliente)
+			logger.info('direcciones: %s', direcciones)
+
 
 		#agregamos el cliente a la tabla res_partner
 		vals = {}
@@ -90,7 +91,7 @@ def AgregarCliente(adapter, email, debug=False):
 		retorno = clientenew.create('res.partner', vals)
 
 		if debug:
-			print 'ID', retorno
+			logger.info('ID cliente: %s', str(retorno))
 
 		return retorno
 	else:
@@ -121,21 +122,21 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 	error = False
 	
 	if debug:
-		print 'Parametros:', param
+		logger.info('>>> Parametros enviados: %s', str(param))
 	resp = adapter.nuevosPedidosColectivos(param)
 	if debug:
-		print 'Codigo respuesta servidor:', resp.status_code
+		logger.info('>>> Codigo respuesta servidor: %s', str(resp.status_code))
 
 	if (resp) and (resp.status_code==200):
 		#llegaron los datos bien
 		datos = resp.json()
 		if debug:
-			print 'Datos recibidos:', datos
+			logger.info('>>> Datos Recibidos: %s', datos)
 		pedidosRX = datos['pedidosColectivos']
 		cantidadpedidos = len(pedidosRX)
 
 		if debug:
-			print 'Cantidad de pedidos:', cantidadpedidos
+			logger.info('>>> Cantidad de Pedido Recibidos: %s', str(cantidadpedidos))
 		if cantidadpedidos>0:
 			#hay pedidos nuevos
 			for pedido in pedidosRX:
@@ -155,19 +156,19 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 					if agregarcliente!=-1:
 						odoo_clienteid_coordinador = agregarcliente		
 						if debug:
-							print "el cliente coordinador se creo correctamente", emailCoordinador
+							logger.info('>>> El cliente coordinador se creo correctamente: %s', emailCoordinador)
 					else:
 						if debug:
-							print "error al crear el cliente coordinador", emailCoordinador
+							logger.warning('>>> Error al crear el cliente coordinador: %s', emailCoordinador)
 						error=True
 				else:
 					odoo_clienteid_coordinador = int(cliente_coodinador[0]['id'])
 
 				if debug:
-					print aliasPuntoDeRetiro
-					print aliasNodo
-					print id_Domicilio
-					print emailCoordinador
+					logger.info('aliasPuntoDeRetiro: %s', aliasPuntoDeRetiro)
+					logger.info('aliasNodo: %s', aliasNodo)
+					logger.info('id_Domicilio: %s', id_Domicilio)
+					logger.info('emailCoordinador: %s', emailCoordinador)
 
 				
 				if len(pedidosIndividuales)>0:
@@ -176,7 +177,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 						clientes = item['pedidos'].keys()
 						for i in clientes:
 							if debug:
-								print 'cliente: ', i
+								logger.info('Cliente: %s', i)
 
 							#chequeamos si existe el cliente
 							#si no existe lo creamos
@@ -187,15 +188,16 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 								if agregarcliente!=-1:
 									odoo_clienteid = agregarcliente		
 									if debug:
-										print "el cliente se creo correctamente", i
+										logger.info('>>> El cliente se creo correctamente: %s', i)
 								else:
 									if debug:
-										print "error al crear el cliente", i
+										logger.warning('>>> Error al crear el cliente: %s', i)
 									error=True
 							else:
 								odoo_clienteid = int(cliente_id[0]['id'])
 
 							#creamos la orden de venta
+							logger.info('>>> Agregando pedidos colectivos nuevos ...')
 							vals = {
 								'origin': 'Pedido Colectivo',
 								'partner_id': odoo_clienteid, 
@@ -223,9 +225,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 							retorno = saleorder.create('sale.order', vals)			
 
 							if debug:
-								print '-------------------------------------------'
-								print 'productos', items_prod
-								print '-------------------------------------------'
+								logger.info('Productos: %s', str(items_prod))
 
 				else:
 					return 0
@@ -248,22 +248,22 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 	error = False
 	
 	if debug:
-		print 'Parametros:', param
+		logger.info('>>> Parametros Enviados: %s', str(param))
 	resp = adapter.nuevosPedidosIndividuales(param)
 	if debug:
-		print 'Codigo respuesta servidor:', resp.status_code
+		logger.info('Codigo respuesta servidor: %s', str(resp.status_code))
 
 	if (resp) and (resp.status_code==200):
 		#llegaron los datos bien
 		datos = resp.json()
 		if debug:
-			print 'Datos recibidos:', datos
+			logger.info('>>> Datos Recibidos: %s', datos)
 		
 		pedidoRX = datos['pedidoClienteDomicilio']
 		cantidadpedidos = len(pedidoRX)
 
 		if debug:
-			print 'Cantidad de pedidos:', cantidadpedidos
+			logger.info('>>> Cantidad de Pedido Recibidos: %s', str(cantidadpedidos))
 
 		if cantidadpedidos>0:
 			#hay pedidos nuevos
@@ -282,10 +282,10 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 					if agregarcliente!=-1:
 						odoo_clienteid = agregarcliente		
 						if debug:
-							print "el cliente se creo correctamente!"
+							logger.info('>>> El cliente se creo correctamente: %s', id_cliente)
 					else:
 						if debug:
-							print "error al crear el cliente!"
+							logger.warning('>>> Error al crear el cliente: %s', id_cliente)
 						error=True
 				else:
 					odoo_clienteid = int(existecliente[0]['id'])
@@ -320,17 +320,15 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 					retorno = saleorder.create('sale.order', vals)			
 
 					if debug:
-						print '-------------------------------------------'
-						print 'id_Pedido', id_pedido
-						print 'id_Cliente', id_cliente
-						print 'alias_PuntoDeRetiro', alias_puntoderetiro
-						print 'id_Domicilio', id_domicilio
-						print '---------'
-						print 'productos', items_prod
-						print '-------------------------------------------'
+						logger.info('id_pedido: %s', str(id_pedido))
+						logger.info('id_cliente: %s', str(id_cliente))
+						logger.info('alias_puntoderetiro: %s', str(alias_puntoderetiro))
+						logger.info('id_domicilio: %s', str(id_domicilio))
+						logger.info('items: %s', str(items_prod))
+
 				else:
 					if debug:
-						print "error el pedido ya existe"
+						logger.warning('>>> error el pedido ya existe')
 					error=True
 		else:
 			return 0
@@ -351,7 +349,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 
 
 if __name__ == '__main__':
-	debug=False
+	debug=True
 	db = database.Database()
 	ultimo_update = db.GetDatos()
 
@@ -363,11 +361,15 @@ if __name__ == '__main__':
 		f_hasta=datetime.now()
 	db.SetDatos([f_hasta])
 
+	#####################################################################
+	#Para produccion descomentar la siguiente linea
 	#fi=f_desde.strftime('%Y-%m-%d %H:%M:%S')
+
+	#Para produccion comentar la siguiente linea
 	fi='2017-01-09 16:10:11'
+	#####################################################################
 	ff=f_hasta.strftime('%Y-%m-%d %H:%M:%S')
 
-	
 	config.read('configuracion.conf')
 	endpoint = config.get('default', 'confi_chasqui')
 
