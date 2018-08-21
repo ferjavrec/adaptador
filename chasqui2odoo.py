@@ -16,7 +16,68 @@ import logging
 
 logger = logging.getLogger('__chasqui2odoo__')
 logging.basicConfig(level=logging.INFO)
-		
+	
+
+
+def ActualizarDomicilio(adapter, id_domicilio, id_cliente_odoo, debug=False):
+	param = {}
+	param['id'] = id_domicilio
+
+	if debug:
+		logger.info('>>> Parametros enviados: %s', str(param))
+	resp = adapter.datosDireccion(param)
+	if debug:
+		logger.info('>>> Codigo respuesta servidor: %s', str(resp.status_code))
+	if (resp) and (resp.status_code==200):
+		#llegaron los datos bien
+		datos = resp.json()
+		if debug:
+			logger.info('>>> Datos Recibidos: %s', datos)
+				
+		calle = datos['calle']
+		altura = datos['altura']
+		localidad = datos['localidad']
+		codigopostal = datos['codigoPostal']
+		id_domicilio = datos['id_Domicilio']
+	
+		if debug:
+			logger.info('calle: %s', calle)
+			logger.info('altura: %s', altura)		
+			logger.info('localidad: %s', localidad)
+			logger.info('codigo Postal: %s', codigopostal)
+			logger.info('id_domicilio: %s', str(id_domicilio))
+
+
+		#editamos el cliente en la tabla res_partner
+		#agregar al modelo res_partner el campo
+		# x_iddomicilio de tipo integer
+		vals = {}
+		vals['street'] = calle + ' ' + str(altura)
+		vals['zip'] = codigopostal
+		vals['city'] = localidad
+		vals['x_iddomicilio'] = int(id_domicilio)
+		clientedomicilio = Modelo()
+		retorno = clientedomicilio.update('res.partner', id_cliente_odoo, vals)
+		if debug:
+			logger.info('ID cliente: %s', str(retorno))
+
+		return retorno
+	else:
+		#si hay error retorna -1
+		return -1
+
+
+def GetIdDomicilio(id_cliente):
+	cliente = Modelo()
+	filtro = [['id', '=', id_cliente]]
+	fields = ['x_iddomicilio']
+	ret = cliente.search('res.partner', filtro, fields)
+	if ret and ret[0]:
+		return ret[0]['x_iddomicilio']
+	else:
+		return False
+
+
 def GetIdCliente(email):
 	cliente = Modelo()
 	filtro = [['email', '=', email]]
@@ -63,9 +124,9 @@ def AgregarCliente(adapter, email, debug=False):
 		else:
 			altura = 's/d'
 		if direcciones and direcciones[0]:
-			id_Domicilio = direcciones[0]['id_Domicilio']
+			id_domicilio = direcciones[0]['id_Domicilio']
 		else:
-			id_Domicilio = -1	
+			id_domicilio = 0	
 
 		if debug:
 			logger.info('apellido: %s', apellido)
@@ -74,10 +135,13 @@ def AgregarCliente(adapter, email, debug=False):
 			logger.info('telefonoMovil: %s', telefonoMovil)
 			logger.info('telefonoFijo: %s', telefonoFijo)
 			logger.info('id_Cliente: %s', id_cliente)
+			logger.info('id_Domicilio: %s', id_domicilio)
 			logger.info('direcciones: %s', direcciones)
 
 
 		#agregamos el cliente a la tabla res_partner
+		#agregar al modelo res_partner el campo
+		# x_iddomicilio de tipo integer
 		vals = {}
 		vals['name'] = apellido + ', ' + nombre
 		vals['company_id'] = 1
@@ -87,6 +151,7 @@ def AgregarCliente(adapter, email, debug=False):
 		vals['email'] = email
 		vals['phone'] = telefonoFijo
 		vals['mobile'] = telefonoMovil
+		vals['x_iddomicilio'] = int(id_domicilio)  #este campo es personalizado
 		clientenew = Modelo()
 		retorno = clientenew.create('res.partner', vals)
 
@@ -143,7 +208,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 				logger.info('>>> Agregando Pedidos Colectivos ...')
 				aliasPuntoDeRetiro = pedido['aliasPuntoDeRetiro']
 				aliasNodo = pedido['aliasNodo']
-				id_Domicilio = pedido['id_Domicilio']
+				id_domicilio = pedido['id_Domicilio']
 				emailCoordinador = pedido['emailCoordinador']
 				pedidosIndividuales = pedido['pedidosIndividuales']
 
@@ -164,10 +229,18 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 				else:
 					odoo_clienteid_coordinador = int(cliente_coodinador[0]['id'])
 
+
+				#chequeamos la direccion del cliente coordinador y si es distinta la editamos
+				ret = GetIdDomicilio(odoo_clienteid_coordinador)
+				if ret!=id_domicilio:
+					ActualizarDomicilio(adapter, id_domicilio, odoo_clienteid_coordinador, debug)
+					if debug:
+						logger.info('>>> Actualizando el domicilio del cliente coordinador: %s', emailCoordinador)
+
 				if debug:
 					logger.info('aliasPuntoDeRetiro: %s', aliasPuntoDeRetiro)
 					logger.info('aliasNodo: %s', aliasNodo)
-					logger.info('id_Domicilio: %s', id_Domicilio)
+					logger.info('id_Domicilio: %s', id_domicilio)
 					logger.info('emailCoordinador: %s', emailCoordinador)
 
 				
@@ -203,7 +276,8 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 								'partner_id': odoo_clienteid, 
 								'pricelist_id': 1,  
 								'partner_invoice_id': odoo_clienteid,
-								'partner_shipping_id': odoo_clienteid_coordinador
+								'partner_shipping_id': odoo_clienteid_coordinador,
+								'state': 'progress',
 							}
 
 							items_prod = []
@@ -290,6 +364,15 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 				else:
 					odoo_clienteid = int(existecliente[0]['id'])
 
+
+				#chequeamos la direccion del cliente y si es distinta la editamos
+				ret = GetIdDomicilio(odoo_clienteid)
+				if ret!=id_domicilio:
+					ActualizarDomicilio(adapter, id_domicilio, odoo_clienteid, debug)
+					if debug:
+						logger.info('>>> Actualizando el domicilio del cliente: %s', id_cliente)
+
+
 				#chequeamos si el pedido ya existe
 				if not GetIdPedido(id_pedido):
 					logger.info('>>> Agregando pedidos nuevos ...')
@@ -298,7 +381,8 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 						'partner_id': odoo_clienteid, 
 						'pricelist_id': 1,  
 						'partner_invoice_id': odoo_clienteid,
-						'partner_shipping_id': odoo_clienteid
+						'partner_shipping_id': odoo_clienteid,
+						'state': 'progress',
 					}
 					
 					items_prod = []
