@@ -519,15 +519,6 @@
 	},
 	"buffers":
 	[
-		{
-			"file": ".gitignore",
-			"settings":
-			{
-				"buffer_size": 372,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -687,6 +678,7 @@
 	],
 	"file_history":
 	[
+		"/home/fer/unqui/.gitignore",
 		"/home/fer/unqui/chasqui2odoo.py",
 		"/home/fer/unqui/readme",
 		"/home/fer/unqui/xml_rpc.py",
@@ -813,8 +805,7 @@
 		"/home/fer/SIGCoop/account_sigcoop_ar/conversor.py",
 		"/home/fer/SIGCoop/sigcoop_middleware_prepago/test_dev/test.py",
 		"/home/fer/SIGCoop/sigcoop_suministro/invoice.py",
-		"/home/fer/SIGCoop/sigcoop_consumos/consumo.py",
-		"/home/fer/SIGCoop/sale/stock.py"
+		"/home/fer/SIGCoop/sigcoop_consumos/consumo.py"
 	],
 	"find":
 	{
@@ -857,37 +848,8 @@
 	"groups":
 	[
 		{
-			"selected": 0,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": ".gitignore",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 372,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								17,
-								17
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				}
 			]
 		}
 	],
