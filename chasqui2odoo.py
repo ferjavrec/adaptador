@@ -10,6 +10,7 @@ from rest_chasqui import Adapter_Chasqui
 from xml_rpc import Modelo
 from datetime import datetime, timedelta
 from config import config
+from servicios import *
 import database
 import json
 import logging
@@ -19,9 +20,10 @@ logging.basicConfig(level=logging.INFO)
 	
 
 
-def ActualizarDomicilio(adapter, id_domicilio, id_cliente_odoo, debug=False):
+def ActualizarDomicilio(adapter, id_domicilio, id_cliente_odoo, token, debug=False):
 	param = {}
 	param['id'] = id_domicilio
+	param['token'] = token
 
 	if debug:
 		logger.info('>>> Parametros enviados: %s', str(param))
@@ -85,9 +87,10 @@ def GetIdCliente(email):
 	return cliente.search('res.partner', filtro, fields)
 		
 
-def AgregarCliente(adapter, email, debug=False):
+def AgregarCliente(adapter, email, token, debug=False):
 	param = {}
 	param['id'] = email
+	param['token'] = token
 
 	if debug:
 		logger.info('>>> Parametros enviados: %s', str(param))
@@ -178,12 +181,13 @@ def GetIdPedido(id_pedido):
 	return pedido.search('sale.order', filtro, fields)
 
 
-def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
+def CrearPedidosColectivos(adapter, fi, ff, idVendedor, token, debug=False):
 	logger.info('>>> Chequeando si hay pedidos Colectivos ...')
 	param = {}
 	param['idVendedor'] = idVendedor
 	param['fechaInicial'] = fi
 	param['fechaFinal'] = ff
+	param['token'] = token
 	error = False
 	
 	if debug:
@@ -217,7 +221,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 				cliente_coodinador = GetIdCliente(emailCoordinador)
 				if not cliente_coodinador:
 					#si no existe lo creamos
-					agregarcliente = AgregarCliente(adapter, emailCoordinador, debug)
+					agregarcliente = AgregarCliente(adapter, emailCoordinador, token, debug)
 					if agregarcliente!=-1:
 						odoo_clienteid_coordinador = agregarcliente		
 						if debug:
@@ -233,7 +237,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 				#chequeamos la direccion del cliente coordinador y si es distinta la editamos
 				ret = GetIdDomicilio(odoo_clienteid_coordinador)
 				if ret!=id_domicilio:
-					ActualizarDomicilio(adapter, id_domicilio, odoo_clienteid_coordinador, debug)
+					ActualizarDomicilio(adapter, id_domicilio, odoo_clienteid_coordinador, token, debug)
 					if debug:
 						logger.info('>>> Actualizando el domicilio del cliente coordinador: %s', emailCoordinador)
 
@@ -257,7 +261,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 							cliente_id = GetIdCliente(i)
 							if not cliente_id:
 								#si no existe lo creamos
-								agregarcliente = AgregarCliente(adapter, i, debug)
+								agregarcliente = AgregarCliente(adapter, i, token, debug)
 								if agregarcliente!=-1:
 									odoo_clienteid = agregarcliente		
 									if debug:
@@ -313,12 +317,13 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, debug=False):
 
 
 
-def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
+def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 	logger.info('>>> Chequeando si hay pedidos ...')
 	param = {}
 	param['idVendedor'] = idvendedor
 	param['fechaInicial'] = fi
 	param['fechaFinal'] = ff
+	param['token'] = token
 	error = False
 	
 	if debug:
@@ -352,7 +357,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 				existecliente = GetIdCliente(id_cliente)
 				if not existecliente:
 					#si no existe lo creamos
-					agregarcliente = AgregarCliente(adapter, id_cliente, debug)
+					agregarcliente = AgregarCliente(adapter, id_cliente, token, debug)
 					if agregarcliente!=-1:
 						odoo_clienteid = agregarcliente		
 						if debug:
@@ -368,7 +373,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 				#chequeamos la direccion del cliente y si es distinta la editamos
 				ret = GetIdDomicilio(odoo_clienteid)
 				if ret!=id_domicilio:
-					ActualizarDomicilio(adapter, id_domicilio, odoo_clienteid, debug)
+					ActualizarDomicilio(adapter, id_domicilio, odoo_clienteid, token, debug)
 					if debug:
 						logger.info('>>> Actualizando el domicilio del cliente: %s', id_cliente)
 
@@ -428,14 +433,14 @@ def CrearPedidos(adapter, fi, ff, idvendedor, debug=False):
 
 
 
-
+	
 
 
 
 if __name__ == '__main__':
 	debug=True
 	db = database.Database()
-	ultimo_update = db.GetDatos()
+	ultimo_update = db.GetDatos(0)
 
 	if not ultimo_update[0]:
 		f_hasta=datetime.now()
@@ -443,7 +448,7 @@ if __name__ == '__main__':
 	else:
 		f_desde=ultimo_update[0]
 		f_hasta=datetime.now()
-	db.SetDatos([f_hasta])
+	db.SetDatos([f_hasta],0)
 
 	#####################################################################
 	#Para produccion descomentar la siguiente linea
@@ -461,7 +466,21 @@ if __name__ == '__main__':
 	conection['host'] = config.get(endpoint, 'url')
 	conection['port'] = config.get(endpoint, 'puerto')
 	idvendedor = config.get(endpoint, 'idvendedor')
-
 	mw = Adapter_Chasqui(conection)
-	CrearPedidos(mw, fi, ff, idvendedor, debug)
-	CrearPedidosColectivos(mw, fi, ff, idvendedor, debug)
+	
+
+	param = {}
+	param['email'] = config.get(endpoint, 'email')
+	param['password'] = config.get(endpoint, 'password')
+	ret_token = Login(mw, param, debug)
+	if ret_token!=-1:
+		if Syncro(mw, 'start', idvendedor, ret_token, debug):
+			CrearPedidos(mw, fi, ff, idvendedor, ret_token, debug)
+			CrearPedidosColectivos(mw, fi, ff, idvendedor, ret_token, debug)
+		else:
+			logger.warning('>>> Error al enviar el inicio de sincronizacion')
+
+		if Syncro(mw, 'stop', idvendedor, ret_token, debug):
+			Logout(mw, config.get(endpoint, 'email'), ret_token, debug)
+		else:
+			logger.warning('>>> Error al enviar el fin de sincronizacion')

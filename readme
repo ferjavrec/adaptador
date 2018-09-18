@@ -1,1 +1,17 @@
 Readme.
+#campos en tabla res_partner para productor
+
+#name         #nombre productor
+#comment      #hasta 8400 caracteres
+#ref          #hasta 300 caracteres
+
+
+#tabla res_partner_category 
+#esta tabla la usamos para los sellos
+
+#tabla res_partner_res_partner_category_rel
+#esta tabla contiene relacion id res_partner con id res_partner_category
+
+
+
+consultar sobre los campos requeridos en la creacion de los productores

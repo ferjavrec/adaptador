@@ -20,19 +20,32 @@ class Database():
 		self.cur.execute(query)
 
 
-	def GetDatos(self):
-		sql = '''
-			SELECT ultimo_reporte_lectura 
-			FROM configuracion
-			WHERE id = 0
-		''' 
+	def GetDatos(self, modo):
+		if modo==0:
+			sql = '''
+				SELECT ultimo_reporte_lectura 
+				FROM configuracion
+				WHERE id = 0
+			'''
+		else:
+			sql = '''
+				SELECT ultimo_reporte_escritura 
+				FROM configuracion
+				WHERE id = 0
+			'''
+
 		self.cur.execute(sql)
 		return self.cur.fetchone()
 
 
-	def SetDatos(self, param_sql):
-		sql = """UPDATE configuracion SET ultimo_reporte_lectura=%s
-	             WHERE id = 0; """
+	def SetDatos(self, param_sql, modo):
+		if modo==0:
+			sql = '''UPDATE configuracion SET ultimo_reporte_lectura=%s
+		             WHERE id = 0; '''
+		else:
+			sql = '''UPDATE configuracion SET ultimo_reporte_escritura=%s
+		             WHERE id = 0; '''
+
 		self.cur.execute(sql, param_sql)
 		self.conn.commit()
 
