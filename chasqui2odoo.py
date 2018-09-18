@@ -438,7 +438,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 
 
 if __name__ == '__main__':
-	debug=True
+	debug=False
 	db = database.Database()
 	ultimo_update = db.GetDatos(0)
 

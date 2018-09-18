@@ -1,0 +1,7 @@
+# /etc/cron.d/odoo2chasqui: 
+
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+00 01 * * * root /usr/bin/python /home/fer/unqui/odoo2chasqui.py > /home/fer/unqui/odoo2chasqui.log 2>&1

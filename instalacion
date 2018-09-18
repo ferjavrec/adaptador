@@ -1,0 +1,112 @@
+INSTALACION DEL ADAPTADOR CHASQUI2ODOO - ODOO2CHASQUI.
+
+Para la puesta en funcionamiento del adaptador se deben instalar las siguientes librerias:
+
+instalacion del servidor postgresql, la forma de instalacion del adaptador es en la misma instancia donde corre Odoo el cual ya cuenta con una version de Postgresql instalado, en caso de instalar en otro servidor se debe instalar el paquete Posgresql.
+
+
+Librerias python instaladas con pip.
+sudo pip install requests
+sudo pip install psycopg2
+
+
+Estructura de la base de datos "adaptador" y la tabla "configuracion".
+
+-- Table: configuracion
+
+-- DROP TABLE configuracion;
+
+CREATE TABLE configuracion
+(
+  id integer NOT NULL,
+  ultimo_reporte_lectura timestamp without time zone,
+  ultimo_reporte_escritura timestamp without time zone,
+  CONSTRAINT primary_key_id PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE configuracion
+  OWNER TO chasquiodoo;
+
+En database.py linea 14 definir el usuario y password de postgresql.
+user="chasquiodoo", passw="chasquiodoo", host="localhost"
+
+
+En config.py en la linea 19 se debe definir el path donde estan los scripts.
+path = '/home/fer/unqui/'
+
+
+En configuracion.conf se deben colocar todos los parametros de conexion, tanto para el servidor Chasqui como para el servidor Odoo.
+Tambien se debe configurar el idvendedor, email y password del portal Chasqui.
+
+[default]
+; general configuracion: default endpoint
+confi_odoo=odoo
+confi_chasqui=chasqui
+
+[odoo]
+; configuracion entorno Odoo
+url=45.79.148.145:8069
+db=adaptador_test
+user=admin
+password=admin
+
+[chasqui]
+; configuracion entorno Chasqui
+url=168.181.184.203
+puerto=8080
+idvendedor=2
+email=chasquiodoo@email.com
+password=chasquiodoo
+
+
+Para ejecutar los scripts debemos crear tares en el crontab.
+
+FORMATO DE LAS TAREAS
+Las tareas cron siguen una determinada sintaxis. Tienen 5 asteriscos seguidos del comando a ejecutar. Ahora explicaré para qué sirve cada cosa.
+
+* * * * * /bin/ejecutar/script.sh
+
+Los 5 asteriscos
+De izquierda a derecha, los asteriscos representan:
+Minutos: de 0 a 59.
+Horas: de 0 a 23.
+Día del mes: de 1 a 31.
+Mes: de 1 a 12.
+Día de la semana: de 0 a 6, siendo 0 el domingo.
+
+Si se deja un asterisco, quiere decir "cada" minuto, hora, día de mes, mes o día de la semana. 
+
+Por ejemplo:
+* * * * * /bin/ejecutar/script.sh
+
+Script para ejecutar chasqui2odoo.py
+Se ejecuta todos los dias a la 01:00 hs
+
+---------------------------------------
+
+# /etc/cron.d/chasqui2odoo: 
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+00 01 * * * root /usr/bin/python /home/fer/unqui/chasqui2odoo.py > /home/fer/unqui/chasqui2odoo.log 2>&1
+
+---------------------------------------
+
+Script para ejecutar odoo2chasqui.py
+Se ejecuta todos los dias a la 01:00 hs
+
+# /etc/cron.d/chasqui2odoo: 
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+00 01 * * * root /usr/bin/python /home/fer/unqui/odoo2chasqui.py > /home/fer/unqui/odoo2chasqui.log 2>&1
+
+---------------------------------------
+
+Los archivos chasqui2odoo.log y odoo2chasqui.log almacenan el historial de la ultima ejecucion.
+
+

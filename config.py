@@ -16,8 +16,9 @@ except ImportError:
 
 __all__ = ['config']
 
+path = '/home/fer/unqui/'
 CONFIG_PATH = [
-    os.path.realpath('./configuracion.conf'),
+    path + 'configuracion.conf',
 ]
 
 
