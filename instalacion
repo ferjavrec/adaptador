@@ -107,6 +107,9 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 ---------------------------------------
 
+A los dos archivos crontab hacerlos ejecutables.
+chmod a+x chasqui2odoo
+chmod a+x odoo2chasqui
+
+
 Los archivos chasqui2odoo.log y odoo2chasqui.log almacenan el historial de la ultima ejecucion.
-
-
