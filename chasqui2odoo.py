@@ -189,6 +189,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, token, debug=False):
 	param['fechaFinal'] = ff
 	param['token'] = token
 	error = False
+	retorno=0
 	
 	if debug:
 		logger.info('>>> Parametros enviados: %s', str(param))
@@ -325,6 +326,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 	param['fechaFinal'] = ff
 	param['token'] = token
 	error = False
+	retorno=0
 	
 	if debug:
 		logger.info('>>> Parametros Enviados: %s', str(param))
@@ -452,10 +454,10 @@ if __name__ == '__main__':
 
 	#####################################################################
 	#Para produccion descomentar la siguiente linea
-	#fi=f_desde.strftime('%Y-%m-%d %H:%M:%S')
+	fi=f_desde.strftime('%Y-%m-%d %H:%M:%S')
 
 	#Para produccion comentar la siguiente linea
-	fi='2017-01-09 16:10:11'
+	#fi='2017-01-09 16:10:11'
 	#####################################################################
 	ff=f_hasta.strftime('%Y-%m-%d %H:%M:%S')
 
