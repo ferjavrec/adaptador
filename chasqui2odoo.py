@@ -6,6 +6,10 @@ __copyright__ = "Copyright (C) 2018 GENEOS http://www.geneos.com.ar/"
 __license__ = "GPL 3.0"
 __version__ = "1.00"
 
+import sys
+import os
+reload(sys)  
+sys.setdefaultencoding('utf8')
 from rest_chasqui import Adapter_Chasqui
 from xml_rpc import Modelo
 from datetime import datetime, timedelta
@@ -17,7 +21,9 @@ import logging
 
 logger = logging.getLogger('__chasqui2odoo__')
 logging.basicConfig(level=logging.INFO)
-	
+
+dirx = os.path.dirname(__file__)
+path_config = os.path.join(dirx, 'configuracion.conf')	
 
 
 def ActualizarDomicilio(adapter, id_domicilio, id_cliente_odoo, token, debug=False):
@@ -461,7 +467,7 @@ if __name__ == '__main__':
 	#####################################################################
 	ff=f_hasta.strftime('%Y-%m-%d %H:%M:%S')
 
-	config.read('configuracion.conf')
+	config.read(path_config)
 	endpoint = config.get('default', 'confi_chasqui')
 
 	conection = {}
