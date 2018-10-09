@@ -216,10 +216,10 @@ if __name__ == '__main__':
 
 	#####################################################################
 	#Para produccion descomentar la siguiente linea
-	#fi=f_desde.strftime('%Y-%m-%d %H:%M:%S')
+	fi=f_desde.strftime('%Y-%m-%d %H:%M:%S')
 
 	#Para produccion comentar la siguiente linea
-	fi='2018-09-02 16:10:11'
+	#fi='2018-09-02 16:10:11'
 	#####################################################################
 	ff=f_hasta.strftime('%Y-%m-%d %H:%M:%S')
 
