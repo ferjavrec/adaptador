@@ -211,7 +211,7 @@ if __name__ == '__main__':
 		f_desde=f_hasta-timedelta(hours=12)
 	else:
 		f_desde=ultimo_update[0]
-		f_hasta=datetime.now()+timedelta(hours=12) ######DESCOMENTAR timedelta(hours=12)
+		f_hasta=datetime.now()
 	db.SetDatos([f_hasta], 1)
 
 	#####################################################################
