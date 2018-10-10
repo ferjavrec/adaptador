@@ -16,11 +16,11 @@ except ImportError:
 
 __all__ = ['config']
 
-path = '/home/fer/unqui/'
-CONFIG_PATH = [
-    path + 'configuracion.conf',
-]
 
+dirx = os.path.dirname(__file__)
+path_config = os.path.join(dirx, 'configuracion.conf')
+
+CONFIG_PATH = [path_config]
 
 class ConfigurationManager(object):
     def __init__(self):
