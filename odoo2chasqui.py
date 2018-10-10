@@ -242,7 +242,6 @@ def CheckStock(adapter, fi, ff, idvendedor, token, debug=False):
 		for item in retorno:
 			codigo_interno = GetDefaultCode(item['product_id'][0])[0]['default_code']
 			cantidad = item['qty']
-			print codigo_interno, cantidad
 			
 			if param_tupla.has_key(codigo_interno):
 				cant = param_tupla[codigo_interno]
@@ -259,6 +258,7 @@ def CheckStock(adapter, fi, ff, idvendedor, token, debug=False):
 		
 
 		if len(tupla)>0:
+			logger.info('>>> Actualizando stock ...')
 			param = {}
 			param['idVendedor'] = idvendedor
 			param['token'] = token
