@@ -111,7 +111,7 @@ def Productores(adapter, fi, ff, idvendedor, token, debug=False):
 		param['token'] = token
 		param['productores'] = tupla
 	
-		respuesta = mw.actualizarProductores(param)
+		respuesta = adapter.actualizarProductores(param)
 
 		if respuesta.status_code==200:
 			ret = True
@@ -191,7 +191,7 @@ def Productos(adapter, fi, ff, idvendedor, token, debug=False):
 		param['token'] = token
 		param['variantes'] = tupla
 
-		respuesta = mw.actualizarProductos(param)
+		respuesta = adapter.actualizarProductos(param)
 
 		if respuesta.status_code==200:
 			ret = True
@@ -199,6 +199,80 @@ def Productos(adapter, fi, ff, idvendedor, token, debug=False):
 			ret = False
 
 	return ret
+
+
+
+def GetStockLocation(id_location):
+	location = Modelo()
+	filtro = [['name', '=', id_location]]
+	fields = ['id' ,'name', 'complete_name'] 
+	retorno = location.search('stock.location', filtro, fields, None)
+	return retorno
+
+
+
+def GetDefaultCode(id_product):
+	producto = Modelo()
+	filtro = [
+		['id', '=', id_product]
+	]
+	fields = ['default_code']
+	retorno = producto.search('product.product', filtro, fields)
+	return retorno
+
+
+
+def CheckStock(adapter, fi, ff, idvendedor, token, debug=False):
+	ret = False
+	logger.info('>>> Chequeando stock ...')
+	
+	location = GetStockLocation('Chasqui')
+	if location:
+		productos = Modelo()
+		filtro = [
+			['write_date', '>=', fi],
+			['write_date', '<=', ff],
+			['location_id', '=', location[0]['id']]
+		]
+		fields = ['qty','product_id']
+		retorno = productos.search('stock.quant', filtro, fields, None)
+
+
+		param_tupla = {}
+		for item in retorno:
+			codigo_interno = GetDefaultCode(item['product_id'][0])[0]['default_code']
+			cantidad = item['qty']
+			print codigo_interno, cantidad
+			
+			if param_tupla.has_key(codigo_interno):
+				cant = param_tupla[codigo_interno]
+				param_tupla[codigo_interno] = cantidad+cant
+			else:
+				param_tupla[codigo_interno] = cantidad
+
+		tupla=[]
+		for item in param_tupla:
+			dict_prod={}
+			dict_prod['codigoInterno'] = item
+			dict_prod['stock'] = param_tupla[item]
+			tupla.append(dict_prod)
+		
+
+		if len(tupla)>0:
+			param = {}
+			param['idVendedor'] = idvendedor
+			param['token'] = token
+			param['productos'] = tupla
+
+			respuesta = adapter.agregarStockDeProductos(param)
+
+			if respuesta.status_code==200:
+				ret = True
+			else:
+				ret = False
+		
+	return ret
+
 
 
 
@@ -219,7 +293,6 @@ if __name__ == '__main__':
 	#####################################################################
 	#Para produccion descomentar la siguiente linea
 	fi=f_desde.strftime('%Y-%m-%d %H:%M:%S')
-
 	#Para produccion comentar la siguiente linea
 	#fi='2018-09-02 16:10:11'
 	#####################################################################
@@ -238,10 +311,13 @@ if __name__ == '__main__':
 	param['email'] = config.get(endpoint, 'email')
 	param['password'] = config.get(endpoint, 'password')
 	ret_token = Login(mw, param, debug)
+	
+
 	if ret_token!=-1:
 		if Syncro(mw, 'start', idvendedor, ret_token, debug):
 			Productores(mw, fi, ff, idvendedor, ret_token, debug)
 			Productos(mw, fi, ff, idvendedor, ret_token, debug)
+			CheckStock(mw, fi, ff, idvendedor, ret_token, debug)
 		else:
 			logger.warning('>>> Error al enviar el inicio de sincronizacion')
 
