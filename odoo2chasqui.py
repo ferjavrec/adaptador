@@ -230,18 +230,16 @@ def CheckStock(adapter, fi, ff, idvendedor, token, debug=False):
 	if location:
 		productos = Modelo()
 		filtro = [
-			['write_date', '>=', fi],
-			['write_date', '<=', ff],
 			['location_id', '=', location[0]['id']]
 		]
-		fields = ['qty','product_id']
-		retorno = productos.search('stock.quant', filtro, fields, None)
+		fields = ['quantity','product_id']
+		retorno = productos.search('stock.history', filtro, fields, None)
 
 
 		param_tupla = {}
 		for item in retorno:
 			codigo_interno = GetDefaultCode(item['product_id'][0])[0]['default_code']
-			cantidad = item['qty']
+			cantidad = item['quantity']
 			
 			if param_tupla.has_key(codigo_interno):
 				cant = param_tupla[codigo_interno]
