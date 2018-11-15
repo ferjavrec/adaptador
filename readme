@@ -111,3 +111,6 @@ chmod a+x odoo2chasqui
 Los archivos chasqui2odoo.log y odoo2chasqui.log almacenan el historial de la ultima ejecucion.
 
 
+en el modulo res.partner se debe crear un campo personalizado
+con el nombre x_iddomicilio de tipo integer que lo usamos para gurdar el id en chasqui.
+

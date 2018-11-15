@@ -57,8 +57,8 @@ def ActualizarDomicilio(adapter, id_domicilio, id_cliente_odoo, token, debug=Fal
 
 
 		#editamos el cliente en la tabla res_partner
-		#agregar al modelo res_partner el campo
-		# x_iddomicilio de tipo integer
+		#agregar al modelo res_partner el campo personalizado
+		# x_iddomicilio de tipo integer que lo usamos para gurdar el id
 		vals = {}
 		vals['street'] = calle + ' ' + str(altura)
 		vals['zip'] = codigopostal
@@ -173,11 +173,13 @@ def AgregarCliente(adapter, email, token, debug=False):
 		return -1
 
 
+
 def GetIdProducto(cod_Producto):
 	producto = Modelo()
 	filtro = [['default_code', '=', cod_Producto]]
 	fields = ['id']
-	return producto.search('product.template', filtro, fields)
+	return producto.search('product.product', filtro, fields)
+
 
 
 def GetIdPedido(id_pedido):
@@ -324,6 +326,8 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, token, debug=False):
 
 
 
+
+
 def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 	logger.info('>>> Chequeando si hay pedidos ...')
 	param = {}
@@ -413,6 +417,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 							}))
 					vals['order_line'] = items_prod
 
+
 					saleorder = Modelo()
 					retorno = saleorder.create('sale.order', vals)			
 
@@ -446,7 +451,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 
 
 if __name__ == '__main__':
-	debug=False
+	debug=True
 	db = database.Database()
 	ultimo_update = db.GetDatos(0)
 

@@ -36,12 +36,18 @@ def GetSelloProductos(etiqueta_id):
 	ret=None
 	if retorno:
 		etiq = str(retorno[0]['name']).lower().strip()
-		if etiq=='agroecología':
+		if etiq=='agroecologico':
 			ret=1
-		elif etiq=='orgánico':
+		elif etiq=='organico':
 			ret=2
 		elif etiq=='reciclado':
 			ret=3
+		elif etiq=='artesanal':
+			ret=5
+		elif etiq=='en red':
+			ret=7
+		elif etiq=='kilometro cero':
+			ret=8
 		else:
 			ret=None
 	return ret
@@ -61,6 +67,10 @@ def GetSelloProductor(category_id):
 			ret=1
 		elif categ=='recuperadas':
 			ret=2
+		elif categ=='agricultura familiar':
+			ret=3
+		elif categ=='empresa social':
+			ret=4
 		else:
 			ret=None
 	return ret
@@ -149,7 +159,7 @@ def GetProductor(id_productor):
 
 def Productos(adapter, fi, ff, idvendedor, token, debug=False):
 	ret = False
-	logger.info('>>> Chequeando si hay productos nuevos o updates ...')
+	logger.info('>>> Chequeando si hay productos nuevos ...')
 	productos = Modelo()
 	filtro = [
 		['write_date', '>=', fi],
@@ -199,6 +209,62 @@ def Productos(adapter, fi, ff, idvendedor, token, debug=False):
 			ret = False
 
 	return ret
+
+
+
+def ProductosUpdate(adapter, fi, ff, idvendedor, token, debug=False):
+	ret = False
+	logger.info('>>> Chequeando si hay productos con updates ...')
+	productos = Modelo()
+	filtro = [
+		['write_date', '>=', fi],
+		['write_date', '<=', ff],
+		['active', '=', True]
+	]
+	fields = ['id','default_code','list_price','categ_id','name','tag_ids','seller_id']
+	retorno = productos.search('product.template', filtro, fields, None)
+
+	if len(retorno)>0:
+		if debug:			
+			logger.info('respuesta odoo: %s', str(retorno))
+			logger.info('cantidad de productos: %s', str(len(retorno)))
+		tupla = []
+		for item in retorno:
+			id_producto = item['id']
+			codigo_interno = str(item['default_code'])
+			name_producto = str(item['name']).strip()
+			name_productor = item['seller_id'][1]
+			name_categoria = str(item['categ_id'][1]).strip()
+			importe = item['list_price']
+
+			param_tupla = {}
+			param_tupla['nombreProducto'] = name_producto
+			param_tupla['codigoInterno'] = codigo_interno
+			param_tupla['nombreProductor'] = name_productor
+
+			sellos=[]
+			for sello in item['tag_ids']:
+				sellos.append(GetSelloProductos(sello))
+
+			param_tupla['sellos'] = sellos
+			param_tupla['categoria'] = name_categoria
+			param_tupla['precio'] = importe
+			tupla.append(param_tupla)
+
+		param = {}
+		param['idVendedor'] = idvendedor
+		param['token'] = token
+		param['variantes'] = tupla
+
+		respuesta = adapter.actualizarProductos(param)
+
+		if respuesta.status_code==200:
+			ret = True
+		else:
+			ret = False
+
+	return ret
+
 
 
 
@@ -276,16 +342,16 @@ def CheckStock(adapter, fi, ff, idvendedor, token, debug=False):
 
 
 if __name__ == '__main__':
-	debug=False
+	debug=True
 	db = database.Database()
 	ultimo_update = db.GetDatos(1)
 
 	if not ultimo_update[0]:
-		f_hasta=datetime.now()
+		f_hasta=datetime.utcnow()
 		f_desde=f_hasta-timedelta(hours=12)
 	else:
 		f_desde=ultimo_update[0]
-		f_hasta=datetime.now()
+		f_hasta=datetime.utcnow()
 	db.SetDatos([f_hasta], 1)
 
 	#####################################################################
@@ -314,7 +380,8 @@ if __name__ == '__main__':
 	if ret_token!=-1:
 		if Syncro(mw, 'start', idvendedor, ret_token, debug):
 			Productores(mw, fi, ff, idvendedor, ret_token, debug)
-			Productos(mw, fi, ff, idvendedor, ret_token, debug)
+			#Productos(mw, fi, ff, idvendedor, ret_token, debug)
+			ProductosUpdate(mw, fi, ff, idvendedor, ret_token, debug)
 			CheckStock(mw, fi, ff, idvendedor, ret_token, debug)
 		else:
 			logger.warning('>>> Error al enviar el inicio de sincronizacion')
