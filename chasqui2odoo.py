@@ -286,6 +286,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, token, debug=False):
 							logger.info('>>> Agregando pedidos colectivos nuevos ...')
 							vals = {
 								'origin': 'Pedido Colectivo',
+								'x_origen': 'chasqui',
 								'partner_id': odoo_clienteid, 
 								'pricelist_id': 1,  
 								'partner_invoice_id': odoo_clienteid,
@@ -395,6 +396,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 					logger.info('>>> Agregando pedidos nuevos ...')
 					vals = {
 						'origin': str(id_pedido),
+						'x_origen': 'chasqui',
 						'partner_id': odoo_clienteid, 
 						'pricelist_id': 1,  
 						'partner_invoice_id': odoo_clienteid,

@@ -11,13 +11,11 @@ import os
 reload(sys)  
 sys.setdefaultencoding('utf8')
 
-from rest_chasqui import Adapter_Chasqui
 from xml_rpc import Modelo
 from datetime import datetime, timedelta
 from config import config
 from servicios import *
 import database
-import json
 import logging
 
 logger = logging.getLogger('__odoo2chasqui__')
@@ -157,61 +155,6 @@ def GetProductor(id_productor):
 	return retorno
 
 
-def Productos(adapter, fi, ff, idvendedor, token, debug=False):
-	ret = False
-	logger.info('>>> Chequeando si hay productos nuevos ...')
-	productos = Modelo()
-	filtro = [
-		['write_date', '>=', fi],
-		['write_date', '<=', ff],
-		['active', '=', True]
-	]
-	fields = ['id','default_code','product_tmpl_id','list_price','categ_id','name','tag_ids','seller_id']
-	retorno = productos.search('product.product', filtro, fields, None)
-
-	if len(retorno)>0:
-		if debug:			
-			logger.info('respuesta odoo: %s', str(retorno))
-			logger.info('cantidad de productos: %s', str(len(retorno)))
-		tupla = []
-		for item in retorno:
-			id_producto = item['id']
-			codigo_interno = str(item['default_code'])
-			name_producto = str(item['product_tmpl_id'][1]).strip()
-			name_productor = item['seller_id'][1]
-			name_categoria = str(item['categ_id'][1]).strip()
-			importe = item['list_price']
-
-			param_tupla = {}
-			param_tupla['nombreProducto'] = name_producto
-			param_tupla['codigoInterno'] = codigo_interno
-			param_tupla['nombreProductor'] = name_productor
-
-			sellos=[]
-			for sello in item['tag_ids']:
-				sellos.append(GetSelloProductos(sello))
-
-			param_tupla['sellos'] = sellos
-			param_tupla['categoria'] = name_categoria
-			param_tupla['precio'] = importe
-			tupla.append(param_tupla)
-
-		param = {}
-		param['idVendedor'] = idvendedor
-		param['token'] = token
-		param['variantes'] = tupla
-
-		respuesta = adapter.actualizarProductos(param)
-
-		if respuesta.status_code==200:
-			ret = True
-		else:
-			ret = False
-
-	return ret
-
-
-
 def ProductosUpdate(adapter, fi, ff, idvendedor, token, debug=False):
 	ret = False
 	logger.info('>>> Chequeando si hay productos con updates ...')
@@ -267,7 +210,6 @@ def ProductosUpdate(adapter, fi, ff, idvendedor, token, debug=False):
 
 
 
-
 def GetStockLocation(id_location):
 	location = Modelo()
 	filtro = [['name', '=', id_location]]
@@ -288,40 +230,82 @@ def GetDefaultCode(id_product):
 
 
 
+def StockComprometido(adapter, fi, ff, idvendedor, token, debug=False):
+	param_tupla = {}
+	logger.info('>>> Chequeando stock comprometido sin entregar ...')
+
+	ordenes = Modelo()
+	filtro = [
+		['state', '=', 'progress'],
+		['x_origen', '=', 'chasqui'],
+	]
+	fields = ['order_line']
+	ordenes_ids = ordenes.search('sale.order', filtro, fields, None)
+	if ordenes_ids:
+		lineas = ordenes_ids[0]['order_line']
+		ordenes_lines = Modelo()
+		filtro = [
+			['id', 'in', lineas]
+		]
+		fields = ['product_uos_qty','product_id']
+		lineas_ids = ordenes_lines.search('sale.order.line', filtro, fields, None)
+
+		for item in lineas_ids:
+			codigo_interno = GetDefaultCode(item['product_id'][0])[0]['default_code']
+			cantidad = item['product_uos_qty']*-1
+
+			if param_tupla.has_key(codigo_interno):
+				cant = param_tupla[codigo_interno]
+				param_tupla[codigo_interno] = cantidad + cant
+			else:
+				param_tupla[codigo_interno] = cantidad
+
+	return param_tupla
+
+
 def CheckStock(adapter, fi, ff, idvendedor, token, debug=False):
 	ret = False
 	logger.info('>>> Chequeando stock ...')
-	
+
 	location = GetStockLocation('Chasqui')
 	if location:
 		productos = Modelo()
 		filtro = [
 			['location_id', '=', location[0]['id']]
 		]
-		fields = ['quantity','product_id']
+		fields = ['quantity', 'product_id']
 		retorno = productos.search('stock.history', filtro, fields, None)
 
+		if debug:
+			logger.info('respuesta odoo stock en deposito chasqui: %s', str(retorno))
 
-		param_tupla = {}
+		#consulta si hay stock pendiente de entregar en ordenes de ventas sin confirmar
+		param_tupla = StockComprometido(adapter, fi, ff, idvendedor, token, debug=False)
+
+		if debug:
+			logger.info('respuesta odoo stock comprometido chasqui: %s', str(param_tupla))
+
 		for item in retorno:
 			codigo_interno = GetDefaultCode(item['product_id'][0])[0]['default_code']
 			cantidad = item['quantity']
-			
+
 			if param_tupla.has_key(codigo_interno):
 				cant = param_tupla[codigo_interno]
-				param_tupla[codigo_interno] = cantidad+cant
+				param_tupla[codigo_interno] = cantidad + cant
 			else:
 				param_tupla[codigo_interno] = cantidad
 
-		tupla=[]
+		if debug:
+			logger.info('respuesta odoo stock real chasqui: %s', str(param_tupla))
+
+		tupla = []
 		for item in param_tupla:
-			dict_prod={}
+			dict_prod = {}
 			dict_prod['codigoInterno'] = item
 			dict_prod['stock'] = param_tupla[item]
 			tupla.append(dict_prod)
-		
 
-		if len(tupla)>0:
+		if len(tupla) > 0:
 			logger.info('>>> Actualizando stock ...')
 			param = {}
 			param['idVendedor'] = idvendedor
@@ -330,15 +314,12 @@ def CheckStock(adapter, fi, ff, idvendedor, token, debug=False):
 
 			respuesta = adapter.agregarStockDeProductos(param)
 
-			if respuesta.status_code==200:
+			if respuesta.status_code == 200:
 				ret = True
 			else:
 				ret = False
-		
+
 	return ret
-
-
-
 
 
 if __name__ == '__main__':
@@ -380,7 +361,6 @@ if __name__ == '__main__':
 	if ret_token!=-1:
 		if Syncro(mw, 'start', idvendedor, ret_token, debug):
 			Productores(mw, fi, ff, idvendedor, ret_token, debug)
-			#Productos(mw, fi, ff, idvendedor, ret_token, debug)
 			ProductosUpdate(mw, fi, ff, idvendedor, ret_token, debug)
 			CheckStock(mw, fi, ff, idvendedor, ret_token, debug)
 		else:

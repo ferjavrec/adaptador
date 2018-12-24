@@ -29,9 +29,16 @@ WITH (
 ALTER TABLE configuracion
   OWNER TO chasquiodoo;
 
+CAMPOS PERSONALIZADOS:
+modulo res.partner se debe crear un campo personalizado,
+con el nombre x_iddomicilio de tipo integer que lo usamos para gurdar el id en chasqui.
+
+en el modulo sale.order se debe crear un campo personalizado,
+con el nombre x_origen de tipo char longitud 10, se usa para grabar el origen desde chasqui
+
+
 En database.py linea 14 definir el usuario y password de postgresql.
 user="chasquiodoo", passw="chasquiodoo", host="localhost"
-
 
 En configuracion.conf se deben colocar todos los parametros de conexion, tanto para el servidor Chasqui como para el servidor Odoo.
 Tambien se debe configurar el idvendedor, email y password del portal Chasqui.
@@ -110,7 +117,4 @@ chmod a+x odoo2chasqui
 
 Los archivos chasqui2odoo.log y odoo2chasqui.log almacenan el historial de la ultima ejecucion.
 
-
-en el modulo res.partner se debe crear un campo personalizado
-con el nombre x_iddomicilio de tipo integer que lo usamos para gurdar el id en chasqui.
 
