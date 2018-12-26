@@ -236,7 +236,7 @@ def StockComprometido(adapter, fi, ff, idvendedor, token, debug=False):
 
 	ordenes = Modelo()
 	filtro = [
-		['state', '=', 'progress'],
+		['state', 'in', ('progress','draft')],
 		['x_origen', '=', 'chasqui'],
 	]
 	fields = ['order_line']
