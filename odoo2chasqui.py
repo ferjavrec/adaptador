@@ -236,23 +236,25 @@ def StockComprometido(adapter, fi, ff, idvendedor, token, debug=False):
 
 	ordenes = Modelo()
 	filtro = [
-		['state', 'in', ['progress','draft']],
+		['state', 'in', ['progress', 'draft']],
 		['x_origen', '=', 'chasqui'],
 	]
 	fields = ['order_line']
 	ordenes_ids = ordenes.search('sale.order', filtro, fields, None)
+	lineas = []
 	if ordenes_ids:
-		lineas = ordenes_ids[0]['order_line']
+		for i in ordenes_ids:
+			lineas += i['order_line']
 		ordenes_lines = Modelo()
 		filtro = [
 			['id', 'in', lineas]
 		]
-		fields = ['product_uos_qty','product_id']
+		fields = ['product_uos_qty', 'product_id']
 		lineas_ids = ordenes_lines.search('sale.order.line', filtro, fields, None)
 
 		for item in lineas_ids:
 			codigo_interno = GetDefaultCode(item['product_id'][0])[0]['default_code']
-			cantidad = item['product_uos_qty']*-1
+			cantidad = item['product_uos_qty'] * -1
 
 			if param_tupla.has_key(codigo_interno):
 				cant = param_tupla[codigo_interno]
@@ -320,6 +322,7 @@ def CheckStock(adapter, fi, ff, idvendedor, token, debug=False):
 				ret = False
 
 	return ret
+
 
 
 if __name__ == '__main__':
