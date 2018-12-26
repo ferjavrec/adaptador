@@ -291,7 +291,7 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, token, debug=False):
 								'pricelist_id': 1,  
 								'partner_invoice_id': odoo_clienteid,
 								'partner_shipping_id': odoo_clienteid_coordinador,
-								'state': 'progress',
+								'state': 'draft',
 							}
 
 							items_prod = []
@@ -401,7 +401,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 						'pricelist_id': 1,  
 						'partner_invoice_id': odoo_clienteid,
 						'partner_shipping_id': odoo_clienteid,
-						'state': 'progress',
+						'state': 'draft',
 					}
 					
 					items_prod = []
