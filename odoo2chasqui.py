@@ -164,7 +164,7 @@ def ProductosUpdate(adapter, fi, ff, idvendedor, token, debug=False):
 		['write_date', '<=', ff],
 		['active', '=', True]
 	]
-	fields = ['id','default_code','list_price','categ_id','name','tag_ids','seller_id']
+	fields = ['id','default_code','list_price','categ_id','name','tag_ids','seller_id','product_variant_ids']
 	retorno = productos.search('product.template', filtro, fields, None)
 
 	if len(retorno)>0:
@@ -173,7 +173,7 @@ def ProductosUpdate(adapter, fi, ff, idvendedor, token, debug=False):
 			logger.info('cantidad de productos: %s', str(len(retorno)))
 		tupla = []
 		for item in retorno:
-			id_producto = item['id']
+			id_producto = item['product_variant_ids']
 			codigo_interno = str(item['default_code'])
 			name_producto = str(item['name']).strip()
 			name_productor = item['seller_id'][1]
@@ -181,7 +181,7 @@ def ProductosUpdate(adapter, fi, ff, idvendedor, token, debug=False):
 			importe = item['list_price']
 
 			param_tupla = {}
-			param_tupla['nombreProducto'] = name_producto
+			param_tupla['nombreProducto'] = str(GetNameProducto(id_producto)[0]['name_template']).strip()
 			param_tupla['codigoInterno'] = codigo_interno
 			param_tupla['nombreProductor'] = name_productor
 
@@ -228,6 +228,15 @@ def GetDefaultCode(id_product):
 	retorno = producto.search('product.product', filtro, fields)
 	return retorno
 
+
+def GetNameProducto(id_product):
+	producto = Modelo()
+	filtro = [
+		['id', '=', id_product]
+	]
+	fields = ['name_template']
+	retorno = producto.search('product.product', filtro, fields)
+	return retorno
 
 
 def StockComprometido(adapter, fi, ff, idvendedor, token, debug=False):
