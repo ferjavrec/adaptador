@@ -458,11 +458,11 @@ if __name__ == '__main__':
 	ultimo_update = db.GetDatos(0)
 
 	if not ultimo_update[0]:
-		f_hasta=datetime.now()
+		f_hasta=datetime.utcnow()
 		f_desde=f_hasta-timedelta(hours=12)
 	else:
 		f_desde=ultimo_update[0]
-		f_hasta=datetime.now()
+		f_hasta=datetime.utcnow()
 	db.SetDatos([f_hasta],0)
 
 	#####################################################################
