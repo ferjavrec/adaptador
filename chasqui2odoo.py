@@ -19,11 +19,47 @@ import database
 import json
 import logging
 
+
 logger = logging.getLogger('__chasqui2odoo__')
 logging.basicConfig(level=logging.INFO)
 
 dirx = os.path.dirname(__file__)
 path_config = os.path.join(dirx, 'configuracion.conf')	
+
+
+def RetornaDomicilio(adapter, id_domicilio, token, debug=False):
+	param = {}
+	param['id'] = id_domicilio
+	param['token'] = token
+
+	if debug:
+		logger.info('>>> Parametros enviados: %s', str(param))
+	resp = adapter.datosDireccion(param)
+	if debug:
+		logger.info('>>> Codigo respuesta servidor: %s', str(resp.status_code))
+	if (resp) and (resp.status_code == 200):
+		#llegaron los datos bien
+		datos = resp.json()
+		if debug:
+			logger.info('>>> Datos Recibidos: %s', datos)
+
+		calle = datos['calle']
+		altura = datos['altura']
+		localidad = datos['localidad']
+		codigopostal = datos['codigoPostal']
+		id_domicilio = datos['id_Domicilio']
+
+		if debug:
+			logger.info('calle: %s', calle)
+			logger.info('altura: %s', altura)
+			logger.info('localidad: %s', localidad)
+			logger.info('codigo Postal: %s', codigopostal)
+			logger.info('id_domicilio: %s', str(id_domicilio))
+		
+
+		print '-----------------------------------------------------------------'
+		print datos
+
 
 
 def ActualizarDomicilio(adapter, id_domicilio, id_cliente_odoo, token, debug=False):
@@ -82,6 +118,24 @@ def GetIdDomicilio(id_cliente):
 	ret = cliente.search('res.partner', filtro, fields)
 	if ret and ret[0]:
 		return ret[0]['x_iddomicilio']
+	else:
+		return False
+
+
+def GetIdPuntoDeRetiro(puntoderetiro):
+	titulo = Modelo()
+	filtro = [['shortcut', '=', 'puntoderetiro']]
+	fields = ['id']
+	ret = titulo.search('res.partner.title', filtro, fields)
+	if not ret and ret[0]:
+		return False
+	title_id = ret[0]['id']
+	cliente = Modelo()
+	filtro = [['name', '=', puntoderetiro], ['title', '=', title_id]]
+	fields = ['id']
+	ret = cliente.search('res.partner', filtro, fields)
+	if ret and ret[0]:
+		return ret[0]['id']
 	else:
 		return False
 
@@ -327,8 +381,6 @@ def CrearPedidosColectivos(adapter, fi, ff, idVendedor, token, debug=False):
 
 
 
-
-
 def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 	logger.info('>>> Chequeando si hay pedidos ...')
 	param = {}
@@ -348,6 +400,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 	if (resp) and (resp.status_code==200):
 		#llegaron los datos bien
 		datos = resp.json()
+		print datos
 		if debug:
 			logger.info('>>> Datos Recibidos: %s', datos)
 		
@@ -382,14 +435,20 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 				else:
 					odoo_clienteid = int(existecliente[0]['id'])
 
-
+				#el cliente lo retira en un punto de retiro
+				if alias_puntoderetiro==None:
+					partner_shipping_id = odoo_clienteid
+				else:
+					punto_r = str(alias_puntoderetiro).strip()
+					partner_shipping_id = GetIdPuntoDeRetiro(punto_r)
+				
+				
 				#chequeamos la direccion del cliente y si es distinta la editamos
 				ret = GetIdDomicilio(odoo_clienteid)
 				if ret!=id_domicilio:
 					ActualizarDomicilio(adapter, id_domicilio, odoo_clienteid, token, debug)
 					if debug:
 						logger.info('>>> Actualizando el domicilio del cliente: %s', id_cliente)
-
 
 				#chequeamos si el pedido ya existe
 				if not GetIdPedido(id_pedido):
@@ -400,7 +459,7 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 						'partner_id': odoo_clienteid, 
 						'pricelist_id': 1,  
 						'partner_invoice_id': odoo_clienteid,
-						'partner_shipping_id': odoo_clienteid,
+						'partner_shipping_id': partner_shipping_id,
 						'state': 'draft',
 					}
 					
@@ -444,16 +503,12 @@ def CrearPedidos(adapter, fi, ff, idvendedor, token, debug=False):
 		return -1
 	else:
 		return retorno
-
-
-
-
 	
 
 
 
-if __name__ == '__main__':
-	debug=True
+if __name__ == '__main__': 
+	debug=False
 	db = database.Database()
 	ultimo_update = db.GetDatos(0)
 
@@ -466,13 +521,13 @@ if __name__ == '__main__':
 	db.SetDatos([f_hasta],0)
 
 	#####################################################################
-	#Para produccion descomentar la siguiente linea
-	fi=f_desde.strftime('%Y-%m-%d %H:%M:%S')
-
-	#Para produccion comentar la siguiente linea
-	#fi='2017-01-09 16:10:11'
+	#Para usar en produccion
+	fi = f_desde.strftime('%Y-%m-%d %H:%M:%S')
+	ff = f_hasta.strftime('%Y-%m-%d %H:%M:%S')
+	#Para usar en modo test
+	#fi = '2019-01-01 01:10:11'
+	#ff = '2019-01-01 22:10:11'
 	#####################################################################
-	ff=f_hasta.strftime('%Y-%m-%d %H:%M:%S')
 
 	config.read(path_config)
 	endpoint = config.get('default', 'confi_chasqui')
